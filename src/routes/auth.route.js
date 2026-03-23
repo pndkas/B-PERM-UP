@@ -1,8 +1,12 @@
 import express from "express";
-import { Login, Register } from "../controller/auth.controller.js";
+import { Login, Register } from "../controllers/Member.controller.js";
+import { registerSchema } from "../validations/schema.js";
+import { validate } from "../middlewares/validator.js";
 
 const authRoute = express.Router();
 
-authRoute.post("/register", Register);
+authRoute.post("/register", validate(registerSchema), Register);
 
 authRoute.post("/login", Login);
+
+export default authRoute;

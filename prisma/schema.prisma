@@ -12,86 +12,141 @@ datasource db {
   provider = "mysql"
 }
 
+// ================= ENUMS =================
+enum MemberStatus {
+  ACTIVE
+  BANNED
+  PENDING
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AdminStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum GamePackageStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  KBANK
+  SCB
+  PROMPTPAY
+  TRUEMONEY
+}
+
+// ================= MODELS =================
+
 model Member {
-  id          Int      @id @default(autoincrement())
-  username    String   @unique
-  email       String   @unique
-  password    String
-  balance     Float    @default(0.0)
-  description String?
-  role        String   @default("MEMBER") // เพื่อให้เช็คใน Token ง่ายขึ้น
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relationship: ลูกค้า 1 คนมีได้หลาย Order
-  orders Order[]
-}
-
-// 2. ตารางพนักงาน (แอดมิน)
-model AdminStaff {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
+  memberId  Int          @id @default(autoincrement())
+  name      String
+  email     String       @unique // ใส่ unique เพื่อใช้ตอน Login 
   password  String
-  role      String   @default("STAFF") // เช่น ADMIN, STAFF, SUPERADMIN
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  birthDate DateTime?    @db.Date // ใช้ ? เผื่อลูกค้าไม่กรอก
+  createdAt DateTime     @default(now()) @map("created_at")
+  isActive  MemberStatus @default(PENDING)
+  notes     String?      @db.Text
 
-  // Relationship: แอดมินเป็นคนอนุมัติ Order และบันทึกรายจ่าย
-  approvedOrders Order[]   @relation("AdminApprover")
-  expenses       Expense[]
+  orders Order[] // ลูกค้า 1 คน มีได้หลาย Order
 }
 
-// 3. ตารางเกม
+model Admin {
+  adminId   Int         @id @default(autoincrement())
+  name      String
+  email     String      @unique
+  password  String
+  role      AdminRole   @default(ADMIN)
+  salary    Decimal?    @db.Decimal(10, 2)
+  createdAt DateTime    @default(now()) @map("created_at")
+  isActive  AdminStatus @default(ACTIVE)
+  notes     String?     @db.Text
+
+  approvedOrders Order[] // แอดมิน 1 คน อนุมัติได้หลาย Order
+  expenses       Expense[] // แอดมิน 1 คน มีรายการเบิกจ่ายได้หลายรายการ
+  transactions   Transaction[] // แอดมิน 1 คน มีรายการการเงินที่ดูแลหลายรายการ
+
+  @@map("Admin")
+}
+
 model Game {
-  id          Int     @id @default(autoincrement())
-  name        String
-  image       String? // URL ของรูปภาพเกม
-  description String?
-  isActive    Boolean @default(true)
+  gameId   Int               @id @default(autoincrement())
+  gameName String
+  uidGame  String?           @map("uid_game")
+  category String?
+  imageUrl String?           @map("image_url")
+  isActive GamePackageStatus @default(ACTIVE)
 
-  // Relationship: 1 เกม มีหลาย Package
-  packages Package[]
+  packages Package[] // เกม 1 เกม มีได้หลายแพ็กเกจ
 }
 
-// 4. ตารางแพ็คเกจเติมเงิน
 model Package {
-  id        Int    @id @default(autoincrement())
-  name      String // เช่น "100 Diamonds"
-  price     Float // ราคาขาย
-  unit_cost Float // ต้นทุน (เอาไว้คำนวณกำไร)
-  gameId    Int
-  game      Game   @relation(fields: [gameId], references: [id])
+  packageId   Int               @id @default(autoincrement())
+  packageName String
+  imageUrl    String?
+  price       Decimal           @db.Decimal(10, 2)
+  unitCost    Decimal           @map("unit_cost") @db.Decimal(10, 2)
+  isActive    GamePackageStatus @default(ACTIVE)
+  notes       String?           @db.Text
 
-  orders Order[]
+  gameId Int  @map("game_id")
+  game   Game @relation(fields: [gameId], references: [gameId])
+
+  orders Order[] // แพ็กเกจ 1 อัน ถูกซื้อได้หลาย Order
 }
 
-// 5. ตารางการสั่งซื้อ (หัวใจของระบบ)
 model Order {
-  id       Int    @id @default(autoincrement())
-  memberId Int
-  member   Member @relation(fields: [memberId], references: [id])
+  orderId       Int         @id @default(autoincrement())
+  uidGameMember String      @map("uid_game_member") // UID เกมของลูกค้า
+  slipImageUrl  String?     @map("slip_image_url")
+  amount        Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  notes         String?     @db.Text
 
-  packageId Int
-  package   Package @relation(fields: [packageId], references: [id])
+  memberId Int    @map("member_id")
+  member   Member @relation(fields: [memberId], references: [memberId])
 
-  amount Float // ยอดเงินรวม
-  status String @default("PENDING") // PENDING, COMPLETED, REJECTED
+  packageId Int     @map("package_id")
+  package   Package @relation(fields: [packageId], references: [packageId])
 
-  // เชื่อมกับแอดมินผู้อนุมัติ (อิงตาม ER Diagram ของคุณ)
-  approved_by Int?
-  admin       AdminStaff? @relation("AdminApprover", fields: [approved_by], references: [id])
+  approveBy Int? // ใส่ ? เผื่อกรณี Order เพิ่งสร้าง ยังไม่มีใครอนุมัติ
+  admin     Admin? @relation(fields: [approveBy], references: [adminId])
 
-  createdAt DateTime @default(now())
+  transactions Transaction[]
 }
 
-// 6. ตารางรายจ่าย
+model Transaction {
+  transactionId Int           @id @default(autoincrement())
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @map("payment_method")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [orderId])
+
+  adminId Int?   @map("admin_id")
+  admin   Admin? @relation(fields: [adminId], references: [adminId])
+}
+
 model Expense {
-  id        Int        @id @default(autoincrement())
-  title     String // หัวข้อรายจ่าย เช่น "ค่าเช่า Server"
-  amount    Float
-  adminId   Int
-  admin     AdminStaff @relation(fields: [adminId], references: [id])
-  createdAt DateTime   @default(now())
+  expenseId Int      @id @default(autoincrement())
+  amount    Decimal  @db.Decimal(10, 2)
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  adminId Int   @map("admin_id")
+  admin   Admin @relation(fields: [adminId], references: [adminId])
 }
