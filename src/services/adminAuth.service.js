@@ -26,9 +26,9 @@ export const findAdminByEmail = async (email) => {
 
 export const getAllMembers = async () => {
   return await prisma.member.findMany({
-    orderBy: { id: "desc" },
+    orderBy: { memberId: "desc" },
     select: {
-      id: true,
+      memberId: true,
       name: true,
       email: true,
       isActive: true,
@@ -39,13 +39,13 @@ export const getAllMembers = async () => {
 
 export const checkMemberById = async (memberId) => {
   return await prisma.member.findUnique({
-    where: { id: Number(memberId) },
+    where: { memberId: Number(memberId) },
   });
 };
 
 export const checkMemberStatus = async (memberId, status) => {
   return await prisma.member.update({
-    where: { id: Number(memberId) },
+    where: { memberId: Number(memberId) },
     data: { isActive: status },
   });
 };

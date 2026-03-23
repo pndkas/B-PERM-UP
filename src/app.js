@@ -9,9 +9,9 @@ import { authSuperAdmin } from "./middlewares/checkSuperAdmin.middleware.js";
 
 const app = express();
 app.use((req, res, next) => {
-  // console.log("--- มีคนยิงเข้ามา! ---");
-  // console.log("Method:", req.method);
-  // console.log("URL:", req.url);
+  console.log("--- มันแตกตรงไหน ---");
+  console.log("Method:", req.method);
+  console.log("URL:", req.url);
   next();
 });
 app.use(express.json());
@@ -26,7 +26,8 @@ app.use(
 
 app.use("", authRoute);
 app.use("/member", memberRoute);
-app.use("/admin", authAdmin, adminRoute);
+// app.use("/admin", authAdmin, adminRoute);
+app.use("/admin", adminRoute);
 app.use("/superadmin", authSuperAdmin, superAdminRoute);
 
 export default app;

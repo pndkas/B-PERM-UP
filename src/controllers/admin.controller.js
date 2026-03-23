@@ -30,7 +30,7 @@ export const Login = async (req, res, next) => {
     res.json({
       message: "เข้าสู่ระบบสำเร็จ",
       token,
-      user: { id: admin.adminId, name: admin.name, email: admin.email },
+      user: { id: admin.adminId, role: admin.role, name: admin.name },
     });
   } catch (error) {
     next(error);

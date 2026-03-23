@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 
-const password = "PERM-UPsuperadmin";
+const password = "008080";
 const saltRounds = 9;
 
 const generateHash = async () => {
