@@ -3,10 +3,33 @@ import bcrypt from "bcrypt";
 import {
   checkMemberById,
   checkMemberStatus,
+  createAdmin,
   findAdminByEmail,
   getAllMembers,
+  getDashboardStats,
 } from "../services/adminAuth.service.js";
 import { createAdminToken } from "../utils/jwt.js";
+
+export const registerAdmin = async (req, res, next) => {
+  try {
+    if (req.admin.role !== "SUPER_ADMIN") {
+      return next(createHttpError(403, "คุณไม่มีสิทธิ์เพิ่มบัญชีแอดมิน"));
+    }
+
+    const { name, email, password, role } = req.body;
+
+    const existingAdmin = await findAdminByEmail(email);
+    if (existingAdmin) {
+      return next(createHttpError(400, "อีเมลแอดมินนี้ถูกใช้งานแล้ว"));
+    }
+
+    const newAdmin = await createAdmin({ name, email, password, role });
+
+    res.status(201).json({ message: "สร้างบัญชีแอดมินสำเร็จ", data: newAdmin });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const Login = async (req, res, next) => {
   try {
@@ -27,10 +50,15 @@ export const Login = async (req, res, next) => {
     // สร้าง token
     const token = createAdminToken(admin);
 
+    console.log("SENDING TO FRONTEND:", {
+      id: admin.adminId,
+      role: admin.role,
+    });
+
     res.json({
       message: "เข้าสู่ระบบสำเร็จ",
       token,
-      user: { id: admin.adminId, role: admin.role, name: admin.name },
+      admin: { id: admin.adminId, role: admin.role, name: admin.name },
     });
   } catch (error) {
     next(error);
@@ -67,6 +95,15 @@ export const approveMember = async (req, res, next) => {
       message: `อัปเดตสถานะของ ${updateMember.name} เป็น ${status} เรียบร้อยแล้ว`,
       data: updateMember,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStats = async (req, res, next) => {
+  try {
+    const stats = await getDashboardStats();
+    res.status(200).json(stats);
   } catch (error) {
     next(error);
   }

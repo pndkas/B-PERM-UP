@@ -8,7 +8,7 @@ export const createMemberToken = (member) => {
   };
   return jwt.sign(payload, process.env.MEMBER_SECRET, {
     algorithm: "HS256",
-    expiresIn: "1d",
+    expiresIn: "12h",
   });
 };
 
@@ -28,7 +28,7 @@ export const createAdminToken = (admin) => {
   };
   return jwt.sign(payload, process.env.ADMIN_SECRET, {
     algorithm: "HS256",
-    expiresIn: "1d",
+    expiresIn: "12h",
   });
 };
 

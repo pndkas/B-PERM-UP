@@ -23,7 +23,7 @@ export const Register = async (req, res, next) => {
 
     res.status(201).json({
       message: "สมัครสมาชิกสำเร็จ กรุณารอแอดมินอนุมัติ",
-      user: {
+      member: {
         id: newMember.memberId,
         name: newMember.name,
         email: newMember.email,
@@ -65,7 +65,7 @@ export const Login = async (req, res, next) => {
     res.json({
       message: "เข้าสู่ระบบสำเร็จ",
       token,
-      user: { id: member.memberId, name: member.name, email: member.email },
+      member: { id: member.memberId, name: member.name, email: member.email },
     });
   } catch (error) {
     next(error);

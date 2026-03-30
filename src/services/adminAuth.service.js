@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma.js";
 export const findAdminById = async (id) => {
   return await prisma.admin.findUnique({
     where: {
-      adminId: id,
+      adminId: Number(id),
       isActive: "ACTIVE", // ด่านแรก: เช็คสถานะ (ถ้าโดนแบน จะหาไม่เจอทันที)
     },
     select: {
@@ -21,6 +21,18 @@ export const findAdminById = async (id) => {
 export const findAdminByEmail = async (email) => {
   return await prisma.admin.findUnique({
     where: { email },
+  });
+};
+
+export const createAdmin = async (data) => {
+  const hashedPassword = await bcrypt.hash(data.password, 9);
+  return await prisma.admin.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+      role: data.role,
+    },
   });
 };
 
@@ -48,4 +60,23 @@ export const checkMemberStatus = async (memberId, status) => {
     where: { memberId: Number(memberId) },
     data: { isActive: status },
   });
+};
+
+export const getDashboardStats = async () => {
+  const [totalGames, totalMembers, pendingOrders, revenue] = await Promise.all([
+    prisma.game.count(),
+    prisma.member.count(),
+    prisma.order.count({ where: { status: "PENDING" } }),
+    prisma.order.aggregate({
+      where: { status: "COMPLETED" },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return {
+    totalGames,
+    totalUsers: totalMembers,
+    pendingOrders,
+    totalRevenue: Number(revenue._sum.amount) || 0,
+  };
 };

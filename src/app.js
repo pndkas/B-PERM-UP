@@ -3,9 +3,9 @@ import cors from "cors";
 import authRoute from "./routes/auth.route.js";
 import adminRoute from "./routes/admin.route.js";
 import memberRoute from "./routes/member.route.js";
-import superAdminRoute from "./routes/superadmin.route.js";
-import { authAdmin } from "./middlewares/adminAuth.middleware.js";
-import { authSuperAdmin } from "./middlewares/checkSuperAdmin.middleware.js";
+import gameRoute from "./routes/game.route.js";
+import notFoundHdl from "./middlewares/notFoundHdl.middleware.js";
+import errorHdl from "./middlewares/errorHdl.middleware.js";
 
 const app = express();
 app.use((req, res, next) => {
@@ -26,8 +26,10 @@ app.use(
 
 app.use("", authRoute);
 app.use("/member", memberRoute);
-// app.use("/admin", authAdmin, adminRoute);
 app.use("/admin", adminRoute);
-app.use("/superadmin", authSuperAdmin, superAdminRoute);
+app.use("/", gameRoute);
+
+app.use(notFoundHdl);
+app.use(errorHdl);
 
 export default app;
