@@ -56,6 +56,7 @@ model Member {
   email     String       @unique // ใส่ unique เพื่อใช้ตอน Login 
   password  String
   birthDate DateTime?    @db.Date // ใช้ ? เผื่อลูกค้าไม่กรอก
+  phone     String?      @unique
   createdAt DateTime     @default(now()) @map("created_at")
   isActive  MemberStatus @default(PENDING)
   notes     String?      @db.Text

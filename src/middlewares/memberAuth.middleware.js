@@ -39,7 +39,7 @@ export const authMember = async (req, res, next) => {
     }
 
     if (member.isActive !== "ACTIVE") {
-      return next(createHttpError(403, "สถานะบัญชีไม่ปกติ โปรดติดต่อแอดมิน"));
+      return next(createHttpError(403, "ไม่พบข้อมูล โปรดติดต่อแอดมิน"));
     }
 
     req.member = member;

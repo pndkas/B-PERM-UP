@@ -15,11 +15,12 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 app.use(
   cors({
     origin: ["http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   }),
 );

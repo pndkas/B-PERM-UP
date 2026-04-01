@@ -3,6 +3,7 @@ import {
   createGame,
   deleteGame,
   getAllGames,
+  getGameDetail,
   updateGame,
 } from "../controllers/game.controller.js";
 import {
@@ -13,6 +14,7 @@ import {
 const gameRoute = express.Router();
 
 gameRoute.get("/games", getAllGames);
+gameRoute.get("/games/:id", getGameDetail);
 gameRoute.post("/create", authAdmin, createGame);
 gameRoute.patch("/:id", authAdmin, updateGame);
 gameRoute.delete("/:id", authAdmin, authSuperAdmin, deleteGame);

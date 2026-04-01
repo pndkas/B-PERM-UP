@@ -28,3 +28,17 @@ export const deleteGameById = async (id) => {
     where: { gameId: Number(id) },
   });
 };
+
+export const getGameById = async (id) => {
+  return await prisma.game.findUnique({
+    where: {
+      gameId: Number(id),
+    },
+    include: {
+      packages: {
+        where: { isActive: "ACTIVE" },
+        orderBy: { price: "asc" },
+      },
+    },
+  });
+};

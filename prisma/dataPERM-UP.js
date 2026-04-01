@@ -7,18 +7,18 @@ async function main() {
   // ==========================================
   // 👤 1. สร้างข้อมูล Admin
   // ==========================================
-  const adminPassword = await bcrypt.hash("008080", 9);
+  const adminPassword = await bcrypt.hash("999999", 9);
 
   // เช็คว่ามี Admin ตัวนี้อยู่หรือยัง (ป้องกัน Error ถ้ากด seed ซ้ำ)
   const existingAdmin = await prisma.admin.findUnique({
-    where: { email: "superadmin@gmail.com" },
+    where: { email: "spam@perm-up.com" },
   });
 
   if (!existingAdmin) {
     const admin = await prisma.admin.create({
       data: {
-        name: "Superadmin",
-        email: "superadmin@gmail.com",
+        name: "SuperAdmin",
+        email: "spam@perm-up.com",
         password: adminPassword,
         role: "SUPER_ADMIN",
         isActive: "ACTIVE",
@@ -38,7 +38,8 @@ async function main() {
       gameName: "Valorant",
       uidGame: "RIOT_ID",
       category: "FPS / Action",
-      imageUrl: "https://example.com/images/valorant-logo.png",
+      imageUrl:
+        "https://static.wikia.nocookie.net/valorant/images/6/67/VALORANT.jpg/revision/latest?cb=20230521024215&path-prefix=th",
       isActive: "ACTIVE",
     },
   });

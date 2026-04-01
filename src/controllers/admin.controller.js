@@ -1,12 +1,11 @@
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import {
-  checkMemberById,
-  checkMemberStatus,
   createAdmin,
   findAdminByEmail,
   getAllMembers,
   getDashboardStats,
+  updateMemberData,
 } from "../services/adminAuth.service.js";
 import { createAdminToken } from "../utils/jwt.js";
 
@@ -80,31 +79,30 @@ export const getMembers = async (req, res, next) => {
   }
 };
 
-// ในหน้าเดียวกันก็ทำปุ่ม approve ให้เปลี่ยนสถานะเป็น 'ACTIVE'
-export const approveMember = async (req, res, next) => {
-  try {
-    const { memberId } = req.params;
-    const { status } = req.body;
-    const member = await checkMemberById(memberId);
-    if (!member) {
-      return next(createHttpError(404, "ไม่พบข้อมูลสมาชิก"));
-    }
-
-    const updateMember = await checkMemberStatus(memberId, status);
-    res.status(200).json({
-      message: `อัปเดตสถานะของ ${updateMember.name} เป็น ${status} เรียบร้อยแล้ว`,
-      data: updateMember,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const getStats = async (req, res, next) => {
   try {
     const stats = await getDashboardStats();
     res.status(200).json(stats);
   } catch (error) {
     next(error);
+  }
+};
+
+export const updateMember = async (req, res) => {
+  try {
+    const { memberId } = req.params;
+    const { name, isActive, notes } = req.body;
+    const updated = await updateMemberData(memberId, {
+      name,
+      isActive,
+      notes,
+    });
+
+    res.status(200).json({
+      message: `อัปเดตข้อมูลของ ${updated.name} เรียบร้อยแล้ว`,
+      data: updated,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Update ล้มเหลว: " + error.message });
   }
 };

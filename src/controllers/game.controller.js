@@ -3,6 +3,7 @@ import {
   createNewGame,
   deleteGameById,
   findAllGames,
+  getGameById,
   updateGameById,
 } from "../services/game.service.js";
 
@@ -49,5 +50,20 @@ export const deleteGame = async (req, res, next) => {
     res.json({ message: "ลบเกมสำเร็จ" });
   } catch (error) {
     next(error);
+  }
+};
+
+export const getGameDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const game = await getGameById(id);
+
+    if (!game) {
+      return res.status(404).json({ message: "ไม่พบข้อมูลเกมนี้" });
+    }
+
+    res.status(200).json(game);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

@@ -55,13 +55,6 @@ export const checkMemberById = async (memberId) => {
   });
 };
 
-export const checkMemberStatus = async (memberId, status) => {
-  return await prisma.member.update({
-    where: { memberId: Number(memberId) },
-    data: { isActive: status },
-  });
-};
-
 export const getDashboardStats = async () => {
   const [totalGames, totalMembers, pendingOrders, revenue] = await Promise.all([
     prisma.game.count(),
@@ -79,4 +72,15 @@ export const getDashboardStats = async () => {
     pendingOrders,
     totalRevenue: Number(revenue._sum.amount) || 0,
   };
+};
+
+export const updateMemberData = async (memberId, data) => {
+  return await prisma.member.update({
+    where: { memberId: Number(memberId) }, // 💡 ใช้ ID ให้ตรงกับที่ Service เช็ค
+    data: {
+      name: data.name,
+      isActive: data.isActive,
+      notes: data.notes,
+    },
+  });
 };

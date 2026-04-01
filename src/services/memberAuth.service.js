@@ -35,3 +35,30 @@ export const createMember = async (data) => {
     },
   });
 };
+
+export const findOrdersByMemberId = async (memberId) => {
+  return await prisma.order.findMany({
+    where: {
+      memberId: memberId,
+    },
+    include: {
+      package: {
+        include: {
+          game: true, // ดึงข้อมูลเกมมาด้วย (gameName, imageUrl)
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc", // เอาล่าสุดขึ้นก่อน
+    },
+  });
+};
+
+export const updateMemberData = async (memberId, data) => {
+  return await prisma.member.update({
+    where: { memberId: Number(memberId) },
+    data: {
+      ...data,
+    },
+  });
+};

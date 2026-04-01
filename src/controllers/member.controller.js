@@ -1,6 +1,10 @@
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
-import { findMemberByEmail } from "../services/memberAuth.service.js";
+import {
+  findMemberByEmail,
+  findMemberById,
+  findOrdersByMemberId,
+} from "../services/memberAuth.service.js";
 import { createMemberToken } from "../utils/jwt.js";
 import { createMember } from "../services/memberAuth.service.js";
 
@@ -41,7 +45,7 @@ export const Login = async (req, res, next) => {
     // หา User จาก Email
     const member = await findMemberByEmail(email);
     if (!member) {
-      return next(createHttpError(401, "อีเมลหรือรหัสผ่านไม่ถูกต้อง"));
+      return next(createHttpError(401, "ยังไม่มีข้อมูลสมาชิกใน PERM-UP"));
     }
 
     // เช็ค Password
@@ -67,6 +71,79 @@ export const Login = async (req, res, next) => {
       token,
       member: { id: member.memberId, name: member.name, email: member.email },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyProfile = async (req, res, next) => {
+  try {
+    // 1. ดึงข้อมูลจากที่ Middleware เตรียมไว้ให้ (req.member)
+    const profile = req.member;
+    // console.log("profile", profile);
+
+    if (!profile) {
+      return res.status(404).json({ message: "ไม่พบข้อมูลสมาชิก" });
+    }
+
+    // 2. ถ้าใน Middleware ดึงมาครบแล้ว (name, email, createdAt)
+    // ก็ส่ง profile กลับไปได้เลยครับ
+    res.status(200).json({
+      success: true,
+      data: profile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+import { updateMemberData } from "../services/memberAuth.service.js";
+
+export const updateMyProfile = async (req, res, next) => {
+  try {
+    // 🛡️ ดึง ID จาก Token ที่ Middleware (authMember) เตรียมไว้ให้
+    const memberId = req.member.memberId || req.member.id;
+
+    // 📝 รับเฉพาะฟิลด์ที่ User ทั่วไปแก้ได้
+    const { name, birthDate, phone } = req.body;
+
+    // 🚀 ส่งไปอัปเดตผ่าน Service ตัวเดียวกัน
+    const updated = await updateMemberData(memberId, {
+      name,
+      phone,
+      birthDate: birthDate ? new Date(birthDate) : null,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "อัปเดตโปรไฟล์สำเร็จ 🚀",
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyOrderHistory = async (req, res, next) => {
+  try {
+    const memberId = req.member.memberId;
+
+    if (!memberId) {
+      return res.status(401).json({ message: "ไม่พบข้อมูลผู้ใช้งาน" });
+    }
+    const orders = await findOrdersByMemberId(memberId);
+    const formattedOrders = orders.map((order) => ({
+      orderId: order.orderId,
+      gameName: order.package.game.gameName,
+      packageName: order.package.packageName,
+      amount: order.amount,
+      status: order.status,
+      createdAt: order.createdAt,
+      uidGameMember: order.uidGameMember,
+      slipImageUrl: order.slipImageUrl,
+    }));
+
+    res.status(200).json(formattedOrders);
   } catch (error) {
     next(error);
   }
